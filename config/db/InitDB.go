@@ -10,7 +10,6 @@ import (
 	"go-api/pkg/projectError"
 	"go.uber.org/fx"
 	"io/ioutil"
-	"log"
 )
 
 // DBConfig represents a database configuration.
@@ -42,8 +41,6 @@ func (d *DBConfig) NewDB(config *config.Config) error {
 		return fmt.Errorf("Error checking the connection to the database: %v", err)
 	}
 
-	// Print a message to indicate the connection was successful.
-	fmt.Println("passo aqui ")
 	// Store the database connection in the DBConfig instance.
 	d.DB = db
 
@@ -55,15 +52,10 @@ func (d *DBConfig) InitDB(lc fx.Lifecycle, config *config.Config) {
 	// Define the database name.
 	databaseName := "BDTest"
 
-	// Print a message to indicate the initialization process has started.
-	fmt.Println("passo quie 1")
-
 	// Append a hook to the lifecycle to execute on start and stop.
 	lc.Append(fx.Hook{
 		// OnStart is called when the application starts.
 		OnStart: func(ctx context.Context) error {
-			// Print a message to indicate the OnStart hook has been called.
-			log.Println("OnStart do InitDB foi chamado")
 
 			// Create the database if it doesn't exist.
 			err := d.createDatabase(databaseName)
@@ -88,8 +80,6 @@ func (d *DBConfig) InitDB(lc fx.Lifecycle, config *config.Config) {
 				return err
 			}
 
-			// Print a message to indicate the connection was successful.
-			fmt.Println("passo aqui ")
 			// Execute the SQL file to initialize the database.
 			sqlFilePath := "config/db/migrations/migrationInit.sql"
 			return d.executeSQLFile(sqlFilePath)
@@ -102,15 +92,10 @@ func (d *DBConfig) InitDB(lc fx.Lifecycle, config *config.Config) {
 		},
 	})
 
-	// Print a message to indicate the initialization process has completed.
-	fmt.Println("passo aqui 2")
-
 }
 
 // createDatabase creates the database if it doesn't exist.
 func (d *DBConfig) createDatabase(name string) error {
-	// Print a message to indicate the database creation process has started.
-	fmt.Println("Tentando criar o banco de dados:", name)
 	// Create a query to create the database.
 	query := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s", name)
 	// Execute the query using the database connection.
