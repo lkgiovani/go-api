@@ -2,7 +2,7 @@ package httpApi
 
 import (
 	"fmt"
-	"go-api/api/router"
+	"go-api/internal/app/api/router"
 	"go-api/internal/app/infra/config"
 	"net/http"
 )
