@@ -1,68 +1,92 @@
 package db
 
 import (
+	"context"
 	"database/sql"
+	"errors"
 	"fmt"
+	_ "github.com/go-sql-driver/mysql"
+	"go-api/internal/app/infra/config"
+	"go.uber.org/fx"
 	"io/ioutil"
 	"log"
-
-	_ "github.com/go-sql-driver/mysql"
 )
 
 var DB *sql.DB
 
-func InitDB(databaseName string) {
-	var err error
+func NewDB(config *config.Config) (*sql.DB, error) {
 
-	dsn := "root:root@tcp(127.0.0.1:3306)/"
-
-	DB, err = sql.Open("mysql", dsn)
+	dns := config.Mysql.Url
+	db, err := sql.Open("mysql", dns)
 	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
+		return nil, fmt.Errorf("Error connecting to database: %v", err)
 	}
 
-	// Check the connection
-	err = DB.Ping()
+	err = db.Ping()
 	if err != nil {
-		log.Fatalf("Error checking the connection to the database: %v", err)
-	}
-	fmt.Println("Connection to the database established successfully!")
-
-	createDatabase(databaseName)
-
-	// Now connect to the newly created database
-	DB, err = sql.Open("mysql", fmt.Sprintf("root:root@tcp(localhost:3306)/%s", databaseName))
-	if err != nil {
-		log.Fatalf("Error connecting to database: %v", err)
+		return nil, fmt.Errorf("Error checking the connection to the database: %v", err)
 	}
 
-	// Check the connection to the specific database
-	err = DB.Ping()
-	if err != nil {
-		log.Fatalf("Error checking the connection to the database: %v", err)
-	}
-	fmt.Printf("Connection to the database '%s' established successfully!\n", databaseName)
+	fmt.Println("passo aqui ")
+	return db, nil
+}
 
-	sqlFilePath := "config/db/migrations/migrationInit.sql"
-	executeSQLFile(sqlFilePath)
+func InitDB(lc fx.Lifecycle, config *config.Config, db *sql.DB) {
+	databaseName := "BDTest"
+
+	fmt.Println("passo quie 1")
+
+	lc.Append(fx.Hook{
+		OnStart: func(ctx context.Context) error {
+			log.Println("OnStart do InitDB foi chamado")
+
+			err := createDatabase(databaseName)
+			if err != nil {
+				return errors.New("Error creating the database: " + err.Error())
+			}
+
+			dbNameDSN := fmt.Sprintf(config.Mysql.Url + databaseName)
+			DB, err = sql.Open("mysql", dbNameDSN)
+			if err != nil {
+				return err
+			}
+
+			err = DB.Ping()
+			if err != nil {
+				return err
+			}
+			fmt.Println("passo aqui ")
+			sqlFilePath := "config/db/migrations/migrationInit.sql"
+			return executeSQLFile(sqlFilePath)
+
+		},
+		OnStop: func(ctx context.Context) error {
+			return DB.Close()
+		},
+	})
+
+	fmt.Println("passo aqui 2")
+
 }
 
 // Function to create the database if it doesn't exist
-func createDatabase(name string) {
+func createDatabase(name string) error {
+	fmt.Println("Tentando criar o banco de dados:", name)
 	query := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s", name)
 	_, err := DB.Exec(query)
 	if err != nil {
-		log.Fatalf("Error creating the database '%s': %v", name, err)
+		return errors.New("Error creating the database: " + err.Error())
 	}
-	fmt.Printf("Database '%s' created or already exists.\n", name)
+
+	return nil
 }
 
 // Function to read and execute the SQL file
-func executeSQLFile(filePath string) {
+func executeSQLFile(filePath string) error {
 	// Read the SQL file
 	sqlBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		log.Fatalf("Error reading the SQL file: %v", err)
+		return errors.New("Error reading the SQL file: " + err.Error())
 	}
 
 	// Convert the file content to string
@@ -71,8 +95,8 @@ func executeSQLFile(filePath string) {
 	// Execute the SQL in the database
 	_, err = DB.Exec(sqlString)
 	if err != nil {
-		log.Fatalf("Error executing the SQL: %v", err)
+		return errors.New("Error executing the SQL file: " + err.Error())
 	}
 
-	fmt.Println("SQL file executed successfully!")
+	return nil
 }

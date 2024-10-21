@@ -3,8 +3,8 @@ package config
 import "go-api/pkg/env"
 
 type Config struct {
-	mysql struct {
-		url string
+	Mysql struct {
+		Url string
 	}
 
 	Server struct {
@@ -15,7 +15,7 @@ type Config struct {
 
 func NewConfig() *Config {
 	return &Config{
-		mysql: struct{ url string }{url: env.GetEnvOrDie("URL_MYSQL")},
+		Mysql: struct{ Url string }{Url: env.GetEnvOrDie("URL_MYSQL")},
 
 		Server: struct {
 			Port string
