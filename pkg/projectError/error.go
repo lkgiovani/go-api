@@ -1,4 +1,4 @@
-package errors
+package projectError
 
 import (
 	"errors"
