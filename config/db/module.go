@@ -1,9 +1,19 @@
 package db
 
-import "go.uber.org/fx"
+import (
+	"go-api/internal/app/infra/config"
+	"go.uber.org/fx"
+)
 
 var Module = fx.Module(
 	"db",
-	fx.Provide(NewDB), // Fornece a instância do banco de dados
-	fx.Invoke(InitDB), // Invoca a função de inicialização
+	fx.Provide(NewDBConfig),
+	fx.Invoke(func(d *DBConfig, config *config.Config, lc fx.Lifecycle) {
+		err := d.NewDB(config)
+		if err != nil {
+			panic(err)
+		}
+
+		d.InitDB(lc, config)
+	}),
 )

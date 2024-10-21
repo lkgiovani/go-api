@@ -1,101 +1,153 @@
+// Package db provides a database configuration and initialization functionality.
 package db
 
 import (
 	"context"
 	"database/sql"
-	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"go-api/internal/app/infra/config"
+	"go-api/pkg/projectError"
 	"go.uber.org/fx"
 	"io/ioutil"
 	"log"
 )
 
-var DB *sql.DB
-
-func NewDB(config *config.Config) (*sql.DB, error) {
-
-	dns := config.Mysql.Url
-	db, err := sql.Open("mysql", dns)
-	if err != nil {
-		return nil, fmt.Errorf("Error connecting to database: %v", err)
-	}
-
-	err = db.Ping()
-	if err != nil {
-		return nil, fmt.Errorf("Error checking the connection to the database: %v", err)
-	}
-
-	fmt.Println("passo aqui ")
-	return db, nil
+// DBConfig represents a database configuration.
+type DBConfig struct {
+	// DB is the database connection.
+	DB *sql.DB
 }
 
-func InitDB(lc fx.Lifecycle, config *config.Config, db *sql.DB) {
+// NewDBConfig returns a new instance of DBConfig.
+func NewDBConfig() *DBConfig {
+	return &DBConfig{}
+}
+
+// NewDB establishes a new database connection based on the provided configuration.
+func (d *DBConfig) NewDB(config *config.Config) error {
+	// Create a DSN (Data Source Name) from the configuration.
+	dns := config.Mysql.Url
+	// Open a database connection using the DSN.
+	db, err := sql.Open("mysql", dns)
+	if err != nil {
+		// Return an error if the connection fails.
+		return fmt.Errorf("Error connecting to database: %v", err)
+	}
+
+	// Ping the database to verify the connection.
+	err = db.Ping()
+	if err != nil {
+		// Return an error if the ping fails.
+		return fmt.Errorf("Error checking the connection to the database: %v", err)
+	}
+
+	// Print a message to indicate the connection was successful.
+	fmt.Println("passo aqui ")
+	// Store the database connection in the DBConfig instance.
+	d.DB = db
+
+	return nil
+}
+
+// InitDB initializes the database using the provided lifecycle and configuration.
+func (d *DBConfig) InitDB(lc fx.Lifecycle, config *config.Config) {
+	// Define the database name.
 	databaseName := "BDTest"
 
+	// Print a message to indicate the initialization process has started.
 	fmt.Println("passo quie 1")
 
+	// Append a hook to the lifecycle to execute on start and stop.
 	lc.Append(fx.Hook{
+		// OnStart is called when the application starts.
 		OnStart: func(ctx context.Context) error {
+			// Print a message to indicate the OnStart hook has been called.
 			log.Println("OnStart do InitDB foi chamado")
 
-			err := createDatabase(databaseName)
+			// Create the database if it doesn't exist.
+			err := d.createDatabase(databaseName)
 			if err != nil {
-				return errors.New("Error creating the database: " + err.Error())
+				// Return an error if the database creation fails.
+				return &projectError.Error{Code: projectError.ENOTFOUND, Message: "ProviderAuth not found."}
 			}
 
+			// Create a DSN for the database.
 			dbNameDSN := fmt.Sprintf(config.Mysql.Url + databaseName)
-			DB, err = sql.Open("mysql", dbNameDSN)
+			// Open a database connection using the DSN.
+			d.DB, err = sql.Open("mysql", dbNameDSN)
 			if err != nil {
+				// Return an error if the connection fails.
 				return err
 			}
 
-			err = DB.Ping()
+			// Ping the database to verify the connection.
+			err = d.DB.Ping()
 			if err != nil {
+				// Return an error if the ping fails.
 				return err
 			}
+
+			// Print a message to indicate the connection was successful.
 			fmt.Println("passo aqui ")
+			// Execute the SQL file to initialize the database.
 			sqlFilePath := "config/db/migrations/migrationInit.sql"
-			return executeSQLFile(sqlFilePath)
+			return d.executeSQLFile(sqlFilePath)
 
 		},
+		// OnStop is called when the application stops.
 		OnStop: func(ctx context.Context) error {
-			return DB.Close()
+			// Close the database connection.
+			return d.DB.Close()
 		},
 	})
 
+	// Print a message to indicate the initialization process has completed.
 	fmt.Println("passo aqui 2")
 
 }
 
-// Function to create the database if it doesn't exist
-func createDatabase(name string) error {
+// createDatabase creates the database if it doesn't exist.
+func (d *DBConfig) createDatabase(name string) error {
+	// Print a message to indicate the database creation process has started.
 	fmt.Println("Tentando criar o banco de dados:", name)
+	// Create a query to create the database.
 	query := fmt.Sprintf("CREATE DATABASE IF NOT EXISTS %s", name)
-	_, err := DB.Exec(query)
+	// Execute the query using the database connection.
+	_, err := d.DB.Exec(query) // Use the db passed as a parameter
 	if err != nil {
-		return errors.New("Error creating the database: " + err.Error())
+		// Return an error if the query execution fails.
+		return &projectError.Error{
+			Code:    projectError.ENOTFOUND,
+			Message: "Database not found. " + err.Error(),
+		}
 	}
 
 	return nil
 }
 
-// Function to read and execute the SQL file
-func executeSQLFile(filePath string) error {
+// executeSQLFile reads and executes the SQL file at the given file path.
+// It returns an error if the file cannot be read or the SQL execution fails.
+func (d *DBConfig) executeSQLFile(filePath string) error {
 	// Read the SQL file
 	sqlBytes, err := ioutil.ReadFile(filePath)
 	if err != nil {
-		return errors.New("Error reading the SQL file: " + err.Error())
+		return &projectError.Error{
+			Code:    projectError.ENOTFOUND,
+			Message: "failed to read file: " + err.Error(),
+		}
 	}
 
 	// Convert the file content to string
 	sqlString := string(sqlBytes)
 
 	// Execute the SQL in the database
-	_, err = DB.Exec(sqlString)
+	_, err = d.DB.Exec(sqlString)
 	if err != nil {
-		return errors.New("Error executing the SQL file: " + err.Error())
+		return &projectError.Error{
+			Code:    projectError.ENOTFOUND,
+			Message: "failed to execute SQL: " + err.Error(),
+		}
 	}
 
 	return nil
