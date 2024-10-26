@@ -6,7 +6,7 @@ import (
 )
 
 func (router *Router) getUser() {
-	if router.r.Method != "GET" {
+	if router.Request.Method != "GET" {
 		http.Error(router.w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 	}
 

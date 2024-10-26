@@ -1,21 +1,22 @@
 package router
 
 import (
+	"database/sql"
 	"fmt"
 	"go-api/internal/app/api/router/userRouter"
 	"net/http"
 )
 
-func InitializeRoutes() *http.ServeMux {
+func InitializeRoutes(db *sql.DB) *http.ServeMux {
 	mux := http.NewServeMux()
-
-	fmt.Println(123123)
 
 	mux.HandleFunc("/ping", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "pong")
 	})
 
-	mux.HandleFunc("/user/", userRouter.UserHandler)
+	mux.HandleFunc("/user/", func(w http.ResponseWriter, r *http.Request) {
+		userRouter.UserHandler(w, r, db)
+	})
 
 	return mux
 }
