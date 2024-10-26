@@ -2,10 +2,11 @@ package user_controller
 
 import (
 	"go-api/internal/app/api/model/user_model"
+	"net/http"
 )
 
 type UserControllerInterface interface {
-	SetUser(user_model.User) error
-	GetAllUser() ([]user_model.User, error)
-	GetUserById(id string) (user_model.User, error)
+	SetUser(w http.ResponseWriter, r *http.Request, user user_model.User) error
+	GetAllUser(w http.ResponseWriter, r *http.Request) error
+	GetUserById(w http.ResponseWriter, r *http.Request, id string) error
 }

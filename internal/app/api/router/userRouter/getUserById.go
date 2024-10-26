@@ -2,23 +2,21 @@ package userRouter
 
 import (
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"go-api/internal/app/api/controller/user_controller"
-	"go-api/internal/app/api/model/user_model"
 	"go-api/pkg/projectError"
 	"net/http"
 )
 
-func (router *Router) getUserById(db *sql.DB) {
-	if router.Request.Method != "GET" {
-		http.Error(router.w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+func getUserById(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+	if r.Method != "GET" {
+		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 	}
 
-	id := router.Request.URL.Query().Get("id")
+	id := r.URL.Query().Get("id")
 
 	if id == "" {
-		http.Error(router.w, "Missing id", http.StatusBadRequest)
+		http.Error(w, "Missing id", http.StatusBadRequest)
 		fmt.Println(&projectError.Error{
 			Code:    projectError.EINTERNAL,
 			Message: "Missing id",
@@ -29,17 +27,12 @@ func (router *Router) getUserById(db *sql.DB) {
 	fmt.Println("ID:", id)
 	controller := user_controller.NewUserController(db)
 
-	user, err := controller.GetUserById(id)
+	err := controller.GetUserById(w, r, id)
 	if err != nil {
-		http.Error(router.w, "Failed to set user", http.StatusInternalServerError)
+		http.Error(w, "Failed to set user", http.StatusInternalServerError)
 		fmt.Println(&projectError.Error{Code: projectError.EINTERNAL, Message: "Failed to set user", PrevError: err})
 		return
 	}
 
-	fmt.Println("salve")
-
-	response := user_model.User{Id: user.Id, Name: user.Name, Email: user.Email}
-	jsonResponse, _ := json.Marshal(response)
-	router.w.Header().Set("Content-Type", "application/json")
-	router.w.Write(jsonResponse)
+	return
 }

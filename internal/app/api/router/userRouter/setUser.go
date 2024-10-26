@@ -17,22 +17,22 @@ type PostUserRequest struct {
 	Email string `json:"email"`
 }
 
-func (router *Router) setUser(db *sql.DB) {
-	if router.Request.Method != "POST" {
-		http.Error(router.w, "Method Not Allowed", http.StatusMethodNotAllowed)
+func setUser(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+	if r.Method != "POST" {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
 
-	body, err := io.ReadAll(router.Request.Body)
+	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		http.Error(router.w, "Failed to read request body", http.StatusInternalServerError)
+		http.Error(w, "Failed to read request body", http.StatusInternalServerError)
 		return
 	}
 
 	var user PostUserRequest
 	err = json.Unmarshal(body, &user)
 	if err != nil {
-		http.Error(router.w, "Invalid JSON payload", http.StatusBadRequest)
+		http.Error(w, "Invalid JSON payload", http.StatusBadRequest)
 		return
 	}
 
@@ -41,25 +41,21 @@ func (router *Router) setUser(db *sql.DB) {
 	// Gerando o UUID para o usuário
 	id, err := uuid.NewV7()
 	if err != nil {
-		http.Error(router.w, "Failed to generate UUID", http.StatusInternalServerError)
+		http.Error(w, "Failed to generate UUID", http.StatusInternalServerError)
 		return
 	}
 
 	// Inserindo o usuário
-	err = controller.SetUser(user_model.User{
+	err = controller.SetUser(w, r, user_model.User{
 		Id:    id.String(),
 		Name:  user.Name,
 		Email: user.Email,
 	})
 	if err != nil {
-		http.Error(router.w, "Failed to set user", http.StatusInternalServerError)
+		http.Error(w, "Failed to set user", http.StatusInternalServerError)
 		fmt.Println(&projectError.Error{Code: projectError.EINTERNAL, Message: err.Error()})
 
 		return
 	}
-
-	response := map[string]string{"message": "User created successfully!"}
-	jsonResponse, _ := json.Marshal(response)
-	router.w.Header().Set("Content-Type", "application/json")
-	router.w.Write(jsonResponse)
+	return
 }
