@@ -3,6 +3,7 @@ package user_repo
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"go-api/internal/app/api/model/user_model"
 	"go-api/pkg/projectError"
 )
@@ -35,6 +36,8 @@ func (r *UserRepositoryImpl) SetUser(ctx context.Context, user user_model.User) 
 	if err != nil {
 		return &projectError.Error{Code: projectError.EINTERNAL, Message: err.Error()}
 	}
+
+	fmt.Println("salve1")
 
 	return nil
 }
