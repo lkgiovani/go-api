@@ -24,9 +24,15 @@ func (router *Router) initializeRoutes() {
 	switch router.Request.URL.Path {
 
 	case "/user/getUser":
-		router.getUser()
+
+		router.getUserById(router.db)
+
+	case "/user/getAllUser":
+
+		router.getAllUser(router.db)
 
 	case "/user/setUser":
+
 		router.setUser(router.db)
 
 	default:
