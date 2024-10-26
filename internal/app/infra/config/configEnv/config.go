@@ -1,4 +1,4 @@
-package config
+package configEnv
 
 import "go-api/pkg/env"
 

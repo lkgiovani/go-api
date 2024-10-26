@@ -3,12 +3,10 @@ package main
 import (
 	"fmt"
 	"github.com/joho/godotenv"
-	"go-api/config/db"
-	"go-api/internal/app/infra/config"
+	"go-api/internal/app/infra/config/configEnv"
+	"go-api/internal/app/infra/config/db"
 	"go-api/internal/app/infra/httpApi"
 	"go.uber.org/fx"
-	"go.uber.org/fx/fxevent"
-	"log"
 )
 
 func main() {
@@ -18,14 +16,9 @@ func main() {
 	}
 
 	app := fx.New(
-		fx.WithLogger(
-			func() fxevent.Logger {
-				return &fxevent.ConsoleLogger{W: log.Writer()}
-			},
-		),
-		config.Module,
-		db.Module,      // O módulo de banco de dados será iniciado primeiro
-		httpApi.Module, // O módulo HTTP será iniciado depois
+		configEnv.Module, // Configuração do ambiente
+		db.Module,        // Módulo de banco de dados, que inclui o ciclo de vida com InitDB
+		httpApi.Module,   // Módulo HTTP, que depende do banco de dados
 	)
 
 	app.Run()
