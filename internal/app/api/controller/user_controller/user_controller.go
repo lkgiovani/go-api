@@ -6,7 +6,6 @@ import (
 	"go-api/internal/app/api/model/user_model"
 	"go-api/internal/app/repository/user_repo"
 	"go-api/pkg/projectError"
-	"log"
 )
 
 type userController struct {
@@ -25,8 +24,38 @@ func (uc *userController) SetUser(user user_model.User) error {
 		}
 	}
 
-	log.Println("User created successfully") // Usando log em vez de Println
 	return nil
+}
+
+func (uc *userController) GetAllUser() ([]user_model.User, error) {
+	userDB := user_repo.NewUserRepository(uc.db)
+
+	users, err := userDB.GetAllUser(context.Background())
+	if err != nil {
+		return users, &projectError.Error{
+			Code:      projectError.EINTERNAL,
+			Message:   "failed to set user in database",
+			PrevError: err,
+		}
+	}
+
+	return users, nil
+}
+
+func (uc *userController) GetUserById(id string) (user_model.User, error) {
+	userDB := user_repo.NewUserRepository(uc.db)
+
+	user, err := userDB.GetUserById(id)
+	if err != nil {
+		return user, &projectError.Error{
+			Code:      projectError.EINTERNAL,
+			Message:   "failed to set user in database",
+			PrevError: err,
+		}
+	}
+
+	return user, nil
+
 }
 
 func NewUserController(db *sql.DB) UserControllerInterface {
