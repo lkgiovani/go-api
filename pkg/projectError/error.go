@@ -3,6 +3,8 @@ package projectError
 import (
 	"errors"
 	"fmt"
+	"runtime"
+	"time"
 )
 
 const (
@@ -12,15 +14,42 @@ const (
 	ENOTFOUND       = "not_found"
 	ENOTIMPLEMENTED = "not_implemented"
 	EUNAUTHORIZED   = "unauthorized"
+
+	// Types of error levels
+	LogOnly         = 1
+	CloseConnection = 2
+	ExecuteFunction = 3
 )
 
 type Error struct {
-	Code    string
-	Message string
+	Code      string
+	Message   string
+	Path      string
+	PrevError error
 }
 
 func (e *Error) Error() string {
-	return fmt.Sprintf("Code: %s, Message: %s", e.Code, e.Message)
+	timeNow := time.Now()
+
+	date := fmt.Sprintf("%02d/%02d/%d %02d:%02d", timeNow.Day(), timeNow.Month(), timeNow.Year(), timeNow.Hour(), timeNow.Minute())
+
+	errorMsg := fmt.Sprintf(
+		"\u001B[31m"+
+			"\n===============================ERROR=================================\n"+
+			"Message: %s\n"+
+			"Code: %s\n"+
+			"Time: %s\n"+
+			"Path: %s"+
+			"\n====================================================================="+
+			"\u001B[0m", // Formato com códigos de cor
+		e.Message, e.Code, date, e.Path,
+	)
+
+	if e.PrevError != nil {
+		errorMsg += fmt.Sprintf("\nCaused by: %v", e.PrevError)
+	}
+
+	return errorMsg
 }
 
 func ErrorCode(err error) string {
@@ -51,9 +80,19 @@ func ErrorMessage(err error) string {
 	return "Internal error"
 }
 
-func Errorf(code string, format string, args ...interface{}) error {
+func Errorf(code string, levelError int, format string, args ...interface{}) error {
+	// Obtém informações sobre o local do erro
+	_, file, _, ok := runtime.Caller(1)
+	if !ok {
+		file = "unknown"
+
+	}
+
+	// Cria o erro com o horário atual, caminho do arquivo e linha de código
 	return &Error{
-		Code:    code,
-		Message: fmt.Sprintf(format, args...),
+		Code:      code,
+		Message:   fmt.Sprintf(format, args...),
+		Path:      file,
+		PrevError: nil,
 	}
 }
