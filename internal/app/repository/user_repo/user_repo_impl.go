@@ -95,3 +95,13 @@ func (r *UserRepositoryImpl) GetUserById(id string) (user_model.User, error) {
 	return user, nil
 
 }
+
+func (r *UserRepositoryImpl) DeleteUserById(ctx context.Context, id string) error {
+	query := "DELETE FROM users WHERE id = ?"
+	_, err := r.db.ExecContext(ctx, query, id)
+	if err != nil {
+		return &projectError.Error{Code: projectError.EINTERNAL, Message: err.Error()}
+	}
+
+	return nil
+}

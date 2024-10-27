@@ -8,19 +8,19 @@ import (
 	"net/http"
 )
 
-func getUserById(w http.ResponseWriter, r *http.Request, db *sql.DB) {
-	if r.Method != "GET" {
+func deleteUseById(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+	if r.Method != "DELETE" {
 		http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
 	}
 
 	controller := user_controller.NewUserController(db)
 
-	err := controller.GetUserById(w, r)
+	err := controller.DeleteUserById(w, r)
 	if err != nil {
 		http.Error(w, "Failed to set user", http.StatusInternalServerError)
 		fmt.Println(&projectError.Error{Code: projectError.EINTERNAL, Message: "Failed to set user", PrevError: err})
+
 		return
 	}
-
 	return
 }

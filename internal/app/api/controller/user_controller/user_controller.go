@@ -15,6 +15,12 @@ type userController struct {
 	db *sql.DB
 }
 
+func NewUserController(db *sql.DB) UserControllerInterface {
+	return &userController{
+		db: db,
+	}
+}
+
 func (uc *userController) SetUser(w http.ResponseWriter, r *http.Request, user user_model.User) error {
 	userDB := user_repo.NewUserRepository(uc.db)
 
@@ -30,6 +36,7 @@ func (uc *userController) SetUser(w http.ResponseWriter, r *http.Request, user u
 	response := map[string]string{"message": "User created successfully!"}
 	jsonResponse, _ := json.Marshal(response)
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
 
 	return nil
@@ -51,13 +58,27 @@ func (uc *userController) GetAllUser(w http.ResponseWriter, r *http.Request) err
 
 	response := map[string][]user_model.User{"users": users}
 	jsonResponse, _ := json.Marshal(response)
+
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
 
 	return nil
 }
 
-func (uc *userController) GetUserById(w http.ResponseWriter, r *http.Request, id string) error {
+func (uc *userController) GetUserById(w http.ResponseWriter, r *http.Request) error {
+
+	id := r.URL.Query().Get("id")
+
+	if id == "" {
+		w.Header().Set("Content-Type", "application/json")
+		http.Error(w, `{"error": "Missing id"}`, http.StatusBadRequest)
+		return &projectError.Error{
+			Code:    projectError.EINTERNAL,
+			Message: "Missing id",
+		}
+
+	}
 
 	userDB := user_repo.NewUserRepository(uc.db)
 
@@ -74,15 +95,46 @@ func (uc *userController) GetUserById(w http.ResponseWriter, r *http.Request, id
 
 	response := user_model.User{Id: id, Name: users.Name, Email: users.Email}
 	jsonResponse, _ := json.Marshal(response)
+
 	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
 
 	return nil
 
 }
 
-func NewUserController(db *sql.DB) UserControllerInterface {
-	return &userController{
-		db: db,
+func (uc *userController) DeleteUserById(w http.ResponseWriter, r *http.Request) error {
+
+	id := r.URL.Query().Get("id")
+
+	if id == "" {
+		w.Header().Set("Content-Type", "application/json")
+		http.Error(w, `{"error": "Missing id"}`, http.StatusBadRequest)
+		return &projectError.Error{
+			Code:    projectError.EINTERNAL,
+			Message: "Missing id",
+		}
+
 	}
+
+	userDB := user_repo.NewUserRepository(uc.db)
+
+	err := userDB.DeleteUserById(context.Background(), id)
+	if err != nil {
+		return &projectError.Error{
+			Code:      projectError.EINTERNAL,
+			Message:   "failed to set user in database",
+			PrevError: err,
+		}
+	}
+
+	response := map[string]string{"message": "User deleted successfully!"}
+	jsonResponse, _ := json.Marshal(response)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonResponse)
+
+	return nil
 }
