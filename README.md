@@ -99,10 +99,3 @@ O banco de dados é configurado no módulo `db`. A aplicação utiliza scripts d
 4. Execute a aplicação:
    ```bash
    git clone <URL_REPOSITORIO>
-
-
-
-
-
-   
-  
