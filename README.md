@@ -92,10 +92,10 @@ O banco de dados é configurado no módulo `db`. A aplicação utiliza scripts d
 
 2. Instale as dependências:
    ```bash
-   git clone <URL_REPOSITORIO>
+   go mod tidy
    
 3. Configure as variáveis de ambiente conforme descrito em configEnv/config.go.
 
 4. Execute a aplicação:
    ```bash
-   git clone <URL_REPOSITORIO>
+   go run cmd/start/main.go
