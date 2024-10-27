@@ -94,6 +94,7 @@ O banco de dados é configurado no módulo `db`. A aplicação utiliza scripts d
    ```bash
    go mod tidy
    
+
 3. Configure as variáveis de ambiente conforme descrito em configEnv/config.go.
 
 4. Execute a aplicação:
