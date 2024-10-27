@@ -1,0 +1,35 @@
+networks:
+  gv-network:
+    driver: bridge
+
+services:
+  go-api:
+    container_name: go-api
+    image:  go-api:0.0.1
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8181:8181"
+    networks:
+      - gv-network
+    restart: unless-stopped
+    depends_on:
+      - db
+
+  db:
+    container_name: db
+    image: mariadb:11.3
+    ports:
+      - "3307:3306"
+    networks:
+      - gv-network
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+    volumes:
+      - banco:/var/lib/mysql
+
+volumes:
+  banco:
