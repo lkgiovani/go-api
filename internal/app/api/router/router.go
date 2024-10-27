@@ -20,6 +20,7 @@ func InitializeRoutes(db *sql.DB) *http.ServeMux {
 
 		jsonResponse, _ := json.Marshal(map[string]string{"message": "pong"})
 		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
 		w.Write(jsonResponse)
 	})
 

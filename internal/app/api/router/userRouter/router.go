@@ -25,6 +25,10 @@ func initializeRoutes(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 		deleteUseById(w, r, db)
 
+	case "/user/updateUserById":
+
+		deleteUseById(w, r, db)
+
 	default:
 		http.NotFound(w, r)
 	}
