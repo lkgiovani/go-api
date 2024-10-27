@@ -88,7 +88,7 @@ O banco de dados é configurado no módulo `db`. A aplicação utiliza scripts d
 
 1. Clone o repositório:
    ```bash
-   git clone <URL_REPOSITORIO>
+   git clone git@github.com:lkgiovani/go-api.git
 
 2. Instale as dependências:
    ```bash
