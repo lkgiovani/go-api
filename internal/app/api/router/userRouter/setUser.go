@@ -19,7 +19,11 @@ func setUser(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	err := controller.SetUser(w, r)
 	if err != nil {
 		http.Error(w, "Failed to set user", http.StatusInternalServerError)
-		fmt.Println(&projectError.Error{Code: projectError.EINTERNAL, Message: err.Error()})
+		fmt.Println(&projectError.Error{
+			Code:      projectError.EINTERNAL,
+			Message:   "Failed to set user",
+			PrevError: err,
+		})
 		return
 	}
 	return
