@@ -5,36 +5,31 @@ import (
 	"net/http"
 )
 
-func initializeRoutes(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func NewUserRouter(mux *http.ServeMux, db *sql.DB) {
 
-	switch r.URL.Path {
-
-	case "/user/getUser":
-
-		getUserById(w, r, db)
-
-	case "/user/getAllUser":
+	mux.HandleFunc("GET /user", func(w http.ResponseWriter, r *http.Request) {
 
 		getAllUser(w, r, db)
+	})
 
-	case "/user/setUser":
+	mux.HandleFunc("GET /user/{id}", func(w http.ResponseWriter, r *http.Request) {
+
+		getUserById(w, r, db)
+	})
+
+	mux.HandleFunc("POST /user", func(w http.ResponseWriter, r *http.Request) {
 
 		setUser(w, r, db)
+	})
 
-	case "/user/deleteUseById":
-
-		deleteUseById(w, r, db)
-
-	case "/user/updateUserById":
+	mux.HandleFunc("DELETE /user/{id}", func(w http.ResponseWriter, r *http.Request) {
 
 		deleteUseById(w, r, db)
+	})
 
-	default:
-		http.NotFound(w, r)
-	}
-}
+	mux.HandleFunc("PUT /user/{id}", func(w http.ResponseWriter, r *http.Request) {
 
-func UserHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+		updateUserById(w, r, db)
+	})
 
-	initializeRoutes(w, r, db)
 }

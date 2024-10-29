@@ -11,6 +11,8 @@ import (
 )
 
 // NewServer cria e retorna um novo mux de rotas, injetando a dependência *sql.DB
+//
+// Essa função é injetada no StartServer e é usada para criar o mux de rotas
 func NewServer(db *sql.DB) *http.ServeMux {
 	mux := http.NewServeMux()
 
@@ -22,7 +24,9 @@ func NewServer(db *sql.DB) *http.ServeMux {
 }
 
 // StartServer inicializa o servidor HTTP
-// StartServer inicializa o servidor HTTP usando fx.Lifecycle para garantir a ordem
+//
+// Essa função é usada pelo Fx para inicializar o servidor HTTP
+// e garantir que o servidor seja iniciado e parado corretamente
 func StartServer(lc fx.Lifecycle, mux *http.ServeMux, config *configEnv.Config) {
 	lc.Append(fx.Hook{
 		OnStart: func(context.Context) error {
