@@ -105,3 +105,19 @@ func (r *UserRepositoryImpl) DeleteUserById(ctx context.Context, id string) erro
 
 	return nil
 }
+
+type UpdateUserByIdDTO struct {
+	Id    string
+	Name  *string
+	Email *string
+}
+
+func (r *UserRepositoryImpl) UpdateUserById(ctx context.Context, user UpdateUserByIdDTO) error {
+	query := "UPDATE users SET name = ?, email = ? WHERE id = ?"
+	_, err := r.db.ExecContext(ctx, query, user.Name, user.Email, user.Id)
+	if err != nil {
+		return &projectError.Error{Code: projectError.EINTERNAL, Message: err.Error()}
+	}
+
+	return nil
+}
