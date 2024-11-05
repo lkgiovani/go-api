@@ -21,7 +21,7 @@ jobs:
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23.1'
+          go-version: '1.23.2'
 
       - name: Configure Git Credentials
         run: |
@@ -39,17 +39,17 @@ jobs:
         run: |
           go mod tidy
 
-      - name: Exibir versão do Go
+      - name: Display Go version
         run: go version
 
-      - name: Instalar dependências
+      - name: Install dependencies
         run: go mod download
 
-      - name: Exibir módulos Go
+      - name: List Go modules
         run: go list -m all
 
-      - name: Construir
+      - name: Build project
         run: go build -v ./...
 
-      - name: Testar
+      - name: Run tests
         run: go test -v ./...
