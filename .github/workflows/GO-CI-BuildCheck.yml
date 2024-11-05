@@ -1,0 +1,55 @@
+name: Go
+
+on:
+  push:
+    branches:
+      - "main"
+      - "develop"
+  pull_request:
+    branches:
+      - "main"
+      - "develop"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23.1'
+
+      - name: Configure Git Credentials
+        run: |
+          git config --global url."https://${{ secrets.GIT_TOKEN }}:x-oauth-basic@github.com/".insteadOf "https://github.com/" || exit 1
+          git config --global url."git@github.com:".insteadOf "https://github.com/" || exit 1
+
+      - name: Check Git Configuration (Abort if Fail)
+        run: |
+          git config --get url."https://${{ secrets.GIT_TOKEN }}:x-oauth-basic@github.com/".insteadOf || { echo 'Git configuration failed, aborting...' ; exit 1; }
+
+      - name: Set up environment variables
+        run: echo "GOPRIVATE=github.com/Inside-Code-LTDA" >> $GITHUB_ENV
+
+      - name: Set up Go module
+        run: |
+          go mod tidy
+
+      - name: Exibir versão do Go
+        run: go version
+
+      - name: Instalar dependências
+        run: go mod download
+
+      - name: Exibir módulos Go
+        run: go list -m all
+
+      - name: Construir
+        run: go build -v ./...
+
+      - name: Testar
+        run: go test -v ./...

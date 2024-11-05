@@ -1,4 +1,4 @@
-FROM golang:1.23.1-alpine AS builder
+FROM golang:1.23.2-alpine AS builder
 
 WORKDIR /app
 
@@ -19,8 +19,6 @@ WORKDIR /app
 RUN apk --no-cache add ca-certificates
 
 COPY --from=builder /app/go-api .
-COPY .env .
-
 # Copia o diretório de migrações para a imagem final
 COPY --from=builder /app/internal/app/infra/config/db/migrations /app/internal/app/infra/config/db/migrations
 

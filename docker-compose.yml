@@ -16,6 +16,8 @@ services:
     restart: unless-stopped
     depends_on:
       - db
+    env_file:
+      .env.prod
 
   db:
     container_name: db
@@ -31,6 +33,7 @@ services:
       MYSQL_ROOT_HOST: '%'
     volumes:
       - banco:/var/lib/mysql
+
 
 volumes:
   banco:
