@@ -3,6 +3,7 @@ package user_repo
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"go-api/internal/app/api/model/user_model"
 	"go-api/pkg/projectError"
 )
@@ -98,9 +99,22 @@ func (r *UserRepositoryImpl) GetUserById(id string) (user_model.User, error) {
 
 func (r *UserRepositoryImpl) DeleteUserById(ctx context.Context, id string) error {
 	query := "DELETE FROM users WHERE id = ?"
-	_, err := r.db.ExecContext(ctx, query, id)
+	response, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return &projectError.Error{Code: projectError.EINTERNAL, Message: err.Error()}
+	}
+
+	rowsAffected, err := response.RowsAffected()
+	if err != nil {
+		return &projectError.Error{Code: projectError.EINTERNAL, Message: err.Error()}
+	}
+
+	if rowsAffected == 0 {
+		return &projectError.Error{
+			Code:      projectError.ENOTFOUND,
+			Message:   fmt.Sprintf("user with id %s not found", id),
+			PrevError: err,
+		}
 	}
 
 	return nil

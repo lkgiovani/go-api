@@ -12,31 +12,20 @@ import (
 func (uc *userController) DeleteUserById(w http.ResponseWriter, r *http.Request) error {
 
 	id := strings.TrimPrefix(r.URL.Path, "/user/")
-
 	if id == "" {
-		w.Header().Set("Content-Type", "application/json")
-		http.Error(w, `{"error": "Missing id"}`, http.StatusBadRequest)
-		return &projectError.Error{
-			Code:    projectError.EINTERNAL,
-			Message: "Missing id",
-		}
-
+		jsonError(w, http.StatusBadRequest, "Missing id")
+		return newProjectError(projectError.EINTERNAL, "Missing id", nil, "internal/app/api/controller/user_controller/deleteUserById.go")
 	}
 
 	userDB := user_repo.NewUserRepository(uc.db)
-
 	err := userDB.DeleteUserById(context.Background(), id)
 	if err != nil {
-		return &projectError.Error{
-			Code:      projectError.EINTERNAL,
-			Message:   "failed to set user in database",
-			PrevError: err,
-		}
+		jsonError(w, http.StatusBadRequest, "Failed to delete user")
+		return newProjectError(projectError.EINTERNAL, "Failed to delete user", nil, "internal/app/api/controller/user_controller/deleteUserById.go")
 	}
 
 	response := map[string]string{"message": "User deleted successfully!"}
 	jsonResponse, _ := json.Marshal(response)
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
