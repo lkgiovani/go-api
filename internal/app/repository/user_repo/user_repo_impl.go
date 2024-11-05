@@ -76,7 +76,7 @@ func (r *UserRepositoryImpl) GetUserById(id string) (user_model.User, error) {
 	if err := rows.Err(); err != nil {
 		return user, &projectError.Error{
 			Code:      projectError.EINTERNAL,
-			Message:   "failed to get all user",
+			Message:   "failed to get user",
 			PrevError: err,
 			Path:      "repository/user_repo/user_repo_impl.go",
 		}
@@ -86,7 +86,7 @@ func (r *UserRepositoryImpl) GetUserById(id string) (user_model.User, error) {
 	if err != nil {
 		return user, &projectError.Error{
 			Code:      projectError.EINTERNAL,
-			Message:   "failed to get all user",
+			Message:   "failed to get user",
 			PrevError: err,
 			Path:      "repository/user_repo/user_repo_impl.go",
 		}
