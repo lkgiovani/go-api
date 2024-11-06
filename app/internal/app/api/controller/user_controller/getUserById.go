@@ -1,9 +1,7 @@
 package user_controller
 
 import (
-	"encoding/json"
 	"github.com/go-playground/validator/v10"
-	"go-api/internal/app/api/model/user_model"
 	"go-api/internal/app/repository/user_repo"
 	"go-api/pkg/projectError"
 	"net/http"
@@ -21,34 +19,28 @@ func validateUUID(uuid string) error {
 }
 
 func (uc *userController) GetUserById(w http.ResponseWriter, r *http.Request) error {
+	// Extrai o UUID da URL
 	uuid := strings.TrimPrefix(r.URL.Path, "/user/")
 	if uuid == "" {
-		jsonError(w, http.StatusBadRequest, "Missing id")
+		jsonErrorResponse(w, http.StatusBadRequest, []map[string]string{{"id": "Missing id"}})
 		return newProjectError(projectError.EINTERNAL, "Missing id", nil, "internal/app/api/controller/user_controller/getUserById.go")
 	}
 
+	// Valida o UUID
 	if err := validateUUID(uuid); err != nil {
-		jsonError(w, http.StatusBadRequest, "Invalid id")
+		jsonErrorResponse(w, http.StatusBadRequest, []map[string]string{{"id": "Invalid id"}})
 		return newProjectError(projectError.EINTERNAL, "Error validating id", err, "internal/app/api/controller/user_controller/getUserById.go")
 	}
 
+	// Busca o usuário no banco de dados
 	userDB := user_repo.NewUserRepository(uc.db)
-	users, err := userDB.GetUserById(uuid)
+	user, err := userDB.GetUserById(uuid)
 	if err != nil {
-		jsonError(w, http.StatusBadRequest, "User not found")
+		jsonErrorResponse(w, http.StatusBadRequest, []map[string]string{{"error": "User not found"}})
 		return newProjectError(projectError.EINTERNAL, "Failed to get user", err, "internal/app/api/controller/user_controller/getUserById.go")
 	}
 
-	response := user_model.User{Id: uuid, Name: users.Name, Email: users.Email}
-	jsonResponse, err := json.Marshal(response)
-	if err != nil {
-		jsonError(w, http.StatusInternalServerError, "Failed to encode response")
-		return newProjectError(projectError.EINTERNAL, "Failed to encode response", err, "internal/app/api/controller/user_controller/getUserById.go")
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResponse)
-
+	// Responde com o usuário encontrado
+	jsonSuccessResponse(w, http.StatusOK, user)
 	return nil
 }
