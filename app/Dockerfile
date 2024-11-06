@@ -2,12 +2,12 @@ FROM golang:1.23.2-alpine AS builder
 
 WORKDIR /app
 
-COPY ./go.mod ./
-COPY ./go.sum ./
+COPY go.mod ./
+COPY go.sum ./
 
 RUN go mod download && go mod tidy
 
-COPY . ./
+COPY .. ./
 
 RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o go-api ./cmd/start
 
