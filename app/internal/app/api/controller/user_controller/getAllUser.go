@@ -3,7 +3,6 @@ package user_controller
 import (
 	"context"
 	"encoding/json"
-	"fmt"
 	"go-api/internal/app/api/model/user_model"
 	"go-api/internal/app/repository/user_repo"
 	"go-api/pkg/projectError"
@@ -22,11 +21,8 @@ func (uc *userController) GetAllUser(w http.ResponseWriter, r *http.Request) err
 		}
 	}
 
-	fmt.Println("salve")
-
 	response := map[string][]user_model.User{"users": users}
 	jsonResponse, _ := json.Marshal(response)
-
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
 	w.Write(jsonResponse)
