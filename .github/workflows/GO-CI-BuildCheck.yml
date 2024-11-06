@@ -13,6 +13,9 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./app
 
     steps:
       - name: Checkout code
@@ -36,7 +39,6 @@ jobs:
         run: echo "GOPRIVATE=github.com/Inside-Code-LTDA" >> $GITHUB_ENV
 
       - name: Set up Go module
-        working-directory: ./app
         run: |
           go mod tidy
 
@@ -44,17 +46,13 @@ jobs:
         run: go version
 
       - name: Install dependencies
-        working-directory: ./app
         run: go mod download
 
       - name: List Go modules
-        working-directory: ./app
         run: go list -m all
 
       - name: Build project
-        working-directory: ./app
         run: go build -v ./...
 
       - name: Run tests
-        working-directory: ./app
         run: go test -v ./...
