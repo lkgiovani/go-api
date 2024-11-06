@@ -2,7 +2,6 @@ package user_controller
 
 import (
 	"context"
-	"encoding/json"
 	"go-api/internal/app/api/model/user_model"
 	"go-api/internal/app/repository/user_repo"
 	"go-api/pkg/projectError"
@@ -14,18 +13,12 @@ func (uc *userController) GetAllUser(w http.ResponseWriter, r *http.Request) err
 
 	users, err := userDB.GetAllUser(context.Background())
 	if err != nil {
-		return &projectError.Error{
-			Code:      projectError.EINTERNAL,
-			Message:   "failed to set user in database",
-			PrevError: err,
-		}
+		jsonErrorResponse(w, http.StatusBadRequest, []map[string]string{{"error": "failed to get user from database"}})
+		return newProjectError(projectError.EINTERNAL, "failed to get user from database", nil, "internal/app/api/controller/user_controller/getAllUser.go")
+
 	}
 
 	response := map[string][]user_model.User{"users": users}
-	jsonResponse, _ := json.Marshal(response)
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(http.StatusOK)
-	w.Write(jsonResponse)
-
+	jsonSuccessResponse(w, http.StatusOK, response)
 	return nil
 }
