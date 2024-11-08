@@ -7,7 +7,7 @@ services:
     container_name: go-api
     image:  go-api:0.0.1
     build:
-      context: ..
+      context: ./
       dockerfile: Dockerfile
     ports:
       - "8181:8181"

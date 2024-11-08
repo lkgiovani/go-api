@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"go-api/internal/app/api/model/user_model"
 	"go-api/pkg/projectError"
+	"strings"
 )
 
 type UserRepositoryImpl struct {
@@ -127,10 +128,43 @@ type UpdateUserByIdDTO struct {
 }
 
 func (r *UserRepositoryImpl) UpdateUserById(ctx context.Context, user UpdateUserByIdDTO) error {
-	query := "UPDATE users SET name = ?, email = ? WHERE id = ?"
-	_, err := r.db.ExecContext(ctx, query, user.Name, user.Email, user.Id)
+	var setClauses []string
+	var args []interface{}
+
+	if user.Name != nil && *user.Name != "" {
+		setClauses = append(setClauses, "name = ?")
+		args = append(args, *user.Name)
+	}
+
+	if user.Email != nil && *user.Email != "" {
+		setClauses = append(setClauses, "email = ?")
+		args = append(args, *user.Email)
+	}
+
+	if len(setClauses) == 0 {
+		return &projectError.Error{
+			Code:    projectError.EINVALID,
+			Message: "No fields to update",
+		}
+	}
+
+	query := fmt.Sprintf("UPDATE users SET %s WHERE id = ?", strings.Join(setClauses, ", "))
+	response, err := r.db.ExecContext(ctx, query, user.Name, user.Email, user.Id)
 	if err != nil {
 		return &projectError.Error{Code: projectError.EINTERNAL, Message: err.Error()}
+	}
+
+	rowsAffected, err := response.RowsAffected()
+	if err != nil {
+		return &projectError.Error{Code: projectError.EINTERNAL, Message: err.Error()}
+	}
+
+	if rowsAffected == 0 {
+		return &projectError.Error{
+			Code:      projectError.ENOTFOUND,
+			Message:   fmt.Sprintf("user with id %s not found", user.Id),
+			PrevError: err,
+		}
 	}
 
 	return nil
