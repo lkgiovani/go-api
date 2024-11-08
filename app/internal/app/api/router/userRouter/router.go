@@ -2,34 +2,43 @@ package userRouter
 
 import (
 	"database/sql"
+	"go-api/pkg/projectError"
+	"log"
 	"net/http"
 )
 
-func NewUserRouter(mux *http.ServeMux, db *sql.DB) {
+func handeError(next func(w http.ResponseWriter, r *http.Request) error) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if err := next(w, r); err != nil {
+			log.Println(&projectError.Error{
+				Code:      projectError.EINTERNAL,
+				Message:   "Error",
+				PrevError: err,
+				Path:      "internal/app/api/router/userRouter/router.go",
+			})
 
-	mux.HandleFunc("GET /user", func(w http.ResponseWriter, r *http.Request) {
+		}
+		next(w, r)
+	}
+}
 
-		getAllUser(w, r, db)
-	})
+func handeWithDb(db *sql.DB, next func(w http.ResponseWriter, r *http.Request, db *sql.DB) error) func(w http.ResponseWriter, r *http.Request) error {
+	return func(w http.ResponseWriter, r *http.Request) error {
+		return next(w, r, db)
+	}
+}
 
-	mux.HandleFunc("GET /user/{id}", func(w http.ResponseWriter, r *http.Request) {
+func NewUserRouter(mux *http.ServeMux, db *sql.DB) error {
 
-		getUserById(w, r, db)
-	})
+	mux.HandleFunc("GET /user", handeError(handeWithDb(db, getAllUser)))
 
-	mux.HandleFunc("POST /user", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("GET /user/{id}", handeError(handeWithDb(db, getUserById)))
 
-		setUser(w, r, db)
-	})
+	mux.HandleFunc("POST /user", handeError(handeWithDb(db, setUser)))
 
-	mux.HandleFunc("DELETE /user/{id}", func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("DELETE /user/{id}", handeError(handeWithDb(db, deleteUserById)))
 
-		deleteUserById(w, r, db)
-	})
+	mux.HandleFunc("PUT /user/{id}", handeError(handeWithDb(db, updateUserById)))
 
-	mux.HandleFunc("PUT /user/{id}", func(w http.ResponseWriter, r *http.Request) {
-
-		updateUserById(w, r, db)
-	})
-
+	return nil
 }
