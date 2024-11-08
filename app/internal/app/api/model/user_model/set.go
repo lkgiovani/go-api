@@ -1,13 +1,13 @@
 package user_model
 
-func (user *User) SetId(id string) {
-	user.Id = id
+func (u *User) SetId(id string) {
+	u.Id = id
 }
 
-func (user *User) SetName(name string) {
-	user.Name = name
+func (u *User) SetName(name string) {
+	u.Name = name
 }
 
-func (user *User) SetEmail(email string) {
-	user.Email = email
+func (u *User) SetEmail(email string) {
+	u.Email = email
 }
